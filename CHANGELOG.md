@@ -1,9 +1,13 @@
 # Change Log
 
-## 0.1.0
+## 0.1.2
 
-- Initial release
+- Add more supported languages
 
 ## 0.1.1
 
 - Improve performance
+
+## 0.1.0
+
+- Initial release

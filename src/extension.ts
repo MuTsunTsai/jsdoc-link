@@ -40,14 +40,16 @@ let linkColor: vscode.ThemeColor;
 
 let textCache: string;
 
+const supportedLang = ['javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'svelte', 'vue'];
+
 function process() {
 	const editor = vscode.window.activeTextEditor;
 	const document = editor?.document;
 	if(!editor || !document) return;
 
-	// process only JavaScript & TypeScript
+	// process only supported languages
 	const lang = document.languageId;
-	if(lang != "javascript" && lang != "typescript") return;
+	if(!supportedLang.includes(lang)) return;
 
 	// Re-scan document only if text has changed
 	let text = document.getText();

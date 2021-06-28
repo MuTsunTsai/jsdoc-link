@@ -15,7 +15,18 @@
 		"Other"
 	],
 	"activationEvents": [
-		"*"
+		"onLanguage:javascript",
+		"onLanguage:javascriptreact",
+		"onLanguage:typescript",
+		"onLanguage:typescriptreact",
+		"onLanguage:vue",
+		"onLanguage:svelte",
+		"workspaceContains:*.js",
+		"workspaceContains:*.jsx",
+		"workspaceContains:*.ts",
+		"workspaceContains:*.tsx",
+		"workspaceContains:*.vue",
+		"workspaceContains:*.svelte"
 	],
 	"main": "./out/extension.js",
 	"contributes": {},
