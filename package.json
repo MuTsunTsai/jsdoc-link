@@ -2,7 +2,7 @@
 	"name": "jsdoc-link",
 	"displayName": "JSDoc Link",
 	"description": "Preview JSDoc link in-place.",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"publisher": "MuTsunTsai",
 	"repository": {
 		"type": "git",
