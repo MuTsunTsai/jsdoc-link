@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.1.3
+
+- Improve RegExp
+
 ## 0.1.2
 
 - Add more supported languages

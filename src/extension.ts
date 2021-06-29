@@ -11,7 +11,7 @@ const hiddenDecorationType = vscode.window.createTextEditorDecorationType({
 });
 
 const commentPattern = /\/\*\*(.+?)\*\//gs;
-const linkPattern = /(\{\@link\s+)([^}\s]+)(?:\s+([^}]+?))?\}/gs;
+const linkPattern = /(\{\@link\s+)([^|}\s]+)(?:[|\s]\s*([^}\s][^}]*)|\s+)?\}/gs;
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('jsdoc-link activated');
@@ -90,8 +90,8 @@ function processLink(pos: number, text: string, document: vscode.TextDocument) {
 		let s = pos + match.index;
 		let start = document.positionAt(s);
 		let end = document.positionAt(s + match[0].length);
-
-		if(!match[3]) {
+		let alt = match[3]?.trim();
+		if(!alt) {
 			// when alt text is not used, a simple replacement will do
 			decoratorSets.push({
 				start, end,
@@ -120,7 +120,7 @@ function processLink(pos: number, text: string, document: vscode.TextDocument) {
 						renderOptions: {
 							after: {
 								color: linkColor,
-								contentText: match[3],
+								contentText: alt,
 								fontStyle: 'normal'
 							}
 						}
