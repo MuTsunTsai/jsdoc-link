@@ -1,5 +1,9 @@
 {
     "root": true,
+	"extends": [
+		"eslint:recommended",
+		"plugin:@typescript-eslint/recommended"
+	],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
         "ecmaVersion": 6,
@@ -11,10 +15,16 @@
     "rules": {
         "@typescript-eslint/naming-convention": "warn",
         "@typescript-eslint/semi": "warn",
-        "curly": "warn",
-        "eqeqeq": "warn",
+		"curly": [
+			"warn",
+			"multi-line",
+			"consistent"
+		],
+		"no-cond-assign": "off",
+		"sort-imports": "warn",
+        "eqeqeq": "off",
         "no-throw-literal": "warn",
-        "semi": "off"
+        "semi": "warn"
     },
     "ignorePatterns": [
         "**/*.d.ts"
