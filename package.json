@@ -4,10 +4,18 @@
 	"description": "Preview JSDoc link in-place.",
 	"version": "0.1.4",
 	"publisher": "MuTsunTsai",
+	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/MuTsunTsai/jsdoc-link.git"
+		"url": "https://github.com/MuTsunTsai/jsdoc-link"
 	},
+	"homepage": "https://github.com/MuTsunTsai/jsdoc-link",
+	"bugs": "https://github.com/MuTsunTsai/jsdoc-link/issues",
+	"keywords": [
+		"jsdoc",
+		"javascript",
+		"typescript"
+	],
 	"engines": {
 		"vscode": "^1.57.0"
 	},
