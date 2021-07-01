@@ -5,6 +5,7 @@
 	"version": "0.1.5",
 	"publisher": "MuTsunTsai",
 	"license": "MIT",
+	"icon": "assets/icon.png",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/MuTsunTsai/jsdoc-link"

@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.1.6
+
+- Add extension icon.
+
 ## 0.1.5
 
 - Add license info and fix repo address.
