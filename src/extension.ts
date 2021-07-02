@@ -13,8 +13,6 @@ const commentPattern = /\/\*\*(.+?)\*\//gs;
 const linkPattern = /(\{@link\s+)([^|}\s]+)(?:[|\s]\s*([^}\s][^}]*)|\s+)?\}/gs;
 
 export function activate(context: vs.ExtensionContext): void {
-	console.log('jsdoc-link activated');
-
 	const throttledProcess = throttle(process, THROTTLE_DELAY);
 
 	vs.window.onDidChangeActiveTextEditor(throttledProcess, null, context.subscriptions);
@@ -36,7 +34,6 @@ function throttle(func: () => void, wait: number) {
 		const diff = Date.now() - last;
 		if(diff > wait) {
 			func();
-			console.log("throttle");
 			last += diff;
 		} else {
 			pending = true;
@@ -151,8 +148,4 @@ function processLink(pos: number, text: string, document: vs.TextDocument) {
 			});
 		}
 	}
-}
-
-export function deactivate(): void {
-	console.log('jsdoc-link deactivated.');
 }
