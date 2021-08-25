@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.1.8
+
+- Fix multiple selection.
+
 ## 0.1.6
 
 - Add extension icon.

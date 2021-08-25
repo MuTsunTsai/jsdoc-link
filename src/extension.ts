@@ -86,7 +86,7 @@ function process(): void {
 	const sets = decoratorSets.filter(d =>
 		// for every selection in the editor, it must not intersect the decorator's range
 		selections.every(selection =>
-			((selection.start.line > d.end.line) || (selection.end.line < d.start.line))
+			(selection.start.line > d.end.line) || (selection.end.line < d.start.line)
 		)
 	);
 
