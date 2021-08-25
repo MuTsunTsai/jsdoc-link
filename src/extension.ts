@@ -82,10 +82,12 @@ function process(): void {
 	}
 
 	// Exclude selected ones
-	const selection = editor.selection;
+	const selections = editor.selections;
 	const sets = decoratorSets.filter(d =>
-		(selection.start.line > d.start.line || d.start.line > selection.end.line) &&
-		(selection.start.line > d.end.line || d.start.line > selection.end.line)
+		// for every selection in the editor, it must not intersect the decorator's range
+		selections.every(selection =>
+			((selection.start.line > d.end.line) || (selection.end.line < d.start.line))
+		)
 	);
 
 	// Grouping
