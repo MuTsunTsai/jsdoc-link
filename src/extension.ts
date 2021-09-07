@@ -12,6 +12,15 @@ const hiddenDecorationType = vs.window.createTextEditorDecorationType({
 const commentPattern = /\/\*\*(.+?)\*\//gs;
 const linkPattern = /(\{@link\s+)([^|}\s]+)(?:[|\s]\s*([^}\s][^}]*)|\s+)?\}/gs;
 
+const supportedLang = ['javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'svelte', 'vue'];
+
+type NotUndefined = <T>(value?: T) => value is T;
+const documentLinkProvider: vs.DocumentLinkProvider<vs.DocumentLink> = {
+	provideDocumentLinks: (document) =>
+		scanDocument(document).map((decorator) => decorator.link)
+			.filter(((Boolean as (value?: any) => boolean) as NotUndefined))
+};
+
 export function activate(context: vs.ExtensionContext): void {
 	const throttledProcess = throttle(process, THROTTLE_DELAY);
 
@@ -22,6 +31,8 @@ export function activate(context: vs.ExtensionContext): void {
 		const editor = vs.window.activeTextEditor;
 		if(event.document == editor?.document) throttledProcess();
 	}, null, context.subscriptions);
+
+	vs.languages.registerDocumentLinkProvider(supportedLang, documentLinkProvider);
 
 	throttledProcess();
 }
@@ -50,24 +61,15 @@ interface DecoratorSet {
 	start: vs.Position;
 	end: vs.Position;
 	options: vs.DecorationOptions[];
+	link?: vs.DocumentLink;
 }
 
+let textCache: string;
 let decoratorSets: DecoratorSet[];
+
 let linkColor: vs.ThemeColor;
 
-let textCache: string;
-
-const supportedLang = ['javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'svelte', 'vue'];
-
-function process(): void {
-	const editor = vs.window.activeTextEditor;
-	const document = editor?.document;
-	if(!editor || !document) return;
-
-	// process only supported languages
-	const lang = document.languageId;
-	if(!supportedLang.includes(lang)) return;
-
+function scanDocument(document: vs.TextDocument) {
 	// Re-scan document only if text has changed
 	const text = document.getText();
 	if(textCache != text) {
@@ -80,10 +82,21 @@ function process(): void {
 			processLink(pos, match[1], document);
 		}
 	}
+	return decoratorSets;
+}
+
+function process(): void {
+	const editor = vs.window.activeTextEditor;
+	const document = editor?.document;
+	if(!editor || !document) return;
+
+	// process only supported languages
+	const lang = document.languageId;
+	if(!supportedLang.includes(lang)) return;
 
 	// Exclude selected ones
 	const selections = editor.selections;
-	const sets = decoratorSets.filter(d =>
+	const sets = scanDocument(document).filter(d =>
 		// for every selection in the editor, it must not intersect the decorator's range
 		selections.every(selection =>
 			(selection.start.line > d.end.line) || (selection.end.line < d.start.line)
@@ -112,10 +125,20 @@ function processLink(pos: number, text: string, document: vs.TextDocument) {
 		const start = document.positionAt(s);
 		const end = document.positionAt(s + match[0].length);
 		const alt = match[3]?.trim();
+		let link: vs.DocumentLink | undefined;
+		if (/^(file:)?\.\.?\//.test(match[2])) {
+			link = {
+				range: new vs.Range(
+					document.positionAt(s + match[1].length),
+					document.positionAt(s + match[1].length + match[2].length)
+				),
+				target: vs.Uri.joinPath(document.uri, '..', match[2]),
+			};
+		}
 		if(!alt) {
 			// when alt text is not used, a simple replacement will do
 			decoratorSets.push({
-				start, end,
+				start, end, link,
 				options: [{
 					range: new vs.Range(start, end),
 					renderOptions: {
@@ -132,7 +155,7 @@ function processLink(pos: number, text: string, document: vs.TextDocument) {
 			const p1 = document.positionAt(s + match[1].length);
 			const p2 = document.positionAt(s + match[1].length + match[2].length);
 			decoratorSets.push({
-				start, end,
+				start, end, link,
 				options: [
 					{ range: new vs.Range(start, p1) },
 					{ range: new vs.Range(p2, end) },
