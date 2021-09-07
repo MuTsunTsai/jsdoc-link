@@ -10,7 +10,7 @@ const hiddenDecorationType = vs.window.createTextEditorDecorationType({
 });
 
 const commentPattern = /\/\*\*(.+?)\*\//gs;
-const linkPattern = /(\{@link\s+)([^|}\s]+)(?:[|\s]\s*([^}\s][^}]*)|\s+)?\}/gs;
+const linkPattern = /(\{@link(?:code)?\s+)([^|}\s]+)(?:[|\s]\s*([^}\s][^}]*)|\s+)?\}/gs;
 
 const supportedLang = ['javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'svelte', 'vue'];
 
