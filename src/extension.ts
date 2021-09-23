@@ -10,15 +10,13 @@ const hiddenDecorationType = vs.window.createTextEditorDecorationType({
 });
 
 const commentPattern = /\/\*\*(.+?)\*\//gs;
-const linkPattern = /(\{@link(?:code)?\s+)([^|}\s]+)(?:[|\s]\s*([^}\s][^}]*)|\s+)?\}/gs;
+const linkPattern = /(\{@link(?:code|plain)?\s+)([^|}\s]+)(?:[|\s]\s*([^}\s][^}]*)|\s+)?\}/gs;
 
 const supportedLang = ['javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'svelte', 'vue'];
 
-type NotUndefined = <T>(value?: T) => value is T;
 const documentLinkProvider: vs.DocumentLinkProvider<vs.DocumentLink> = {
 	provideDocumentLinks: (document) =>
-		scanDocument(document).map((decorator) => decorator.link)
-			.filter(((Boolean as (value?: any) => boolean) as NotUndefined))
+		scanDocument(document).map(decorator => decorator.link).filter(Boolean) as vs.DocumentLink[]
 };
 
 export function activate(context: vs.ExtensionContext): void {
@@ -125,8 +123,10 @@ function processLink(pos: number, text: string, document: vs.TextDocument) {
 		const start = document.positionAt(s);
 		const end = document.positionAt(s + match[0].length);
 		const alt = match[3]?.trim();
+		
+		// Add local file link
 		let link: vs.DocumentLink | undefined;
-		if (/^(file:)?\.\.?\//.test(match[2])) {
+		if(/^(file:)?\.\.?\//.test(match[2])) {
 			link = {
 				range: new vs.Range(
 					document.positionAt(s + match[1].length),
@@ -135,6 +135,7 @@ function processLink(pos: number, text: string, document: vs.TextDocument) {
 				target: vs.Uri.joinPath(document.uri, '..', match[2]),
 			};
 		}
+
 		if(!alt) {
 			// when alt text is not used, a simple replacement will do
 			decoratorSets.push({
