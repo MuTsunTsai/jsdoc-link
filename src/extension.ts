@@ -19,6 +19,9 @@ const documentLinkProvider: vs.DocumentLinkProvider<vs.DocumentLink> = {
 		scanDocument(document).map(decorator => decorator.link).filter(Boolean) as vs.DocumentLink[]
 };
 
+/**
+ * Entry point of the extension.
+ */
 export function activate(context: vs.ExtensionContext): void {
 	const throttledProcess = throttle(process, THROTTLE_DELAY);
 
@@ -35,7 +38,7 @@ export function activate(context: vs.ExtensionContext): void {
 	throttledProcess();
 }
 
-function throttle(func: () => void, wait: number) {
+function throttle(func: () => void, wait: number): () => void {
 	let last = 0;
 	let pending = false;
 	function throttled() {
@@ -63,11 +66,13 @@ interface DecoratorSet {
 }
 
 let textCache: string;
+
+/** Current list of {@link DecoratorSet} */
 let decoratorSets: DecoratorSet[];
 
 let linkColor: vs.ThemeColor;
 
-function scanDocument(document: vs.TextDocument) {
+function scanDocument(document: vs.TextDocument): DecoratorSet[] {
 	// Re-scan document only if text has changed
 	const text = document.getText();
 	if(textCache != text) {
@@ -83,6 +88,9 @@ function scanDocument(document: vs.TextDocument) {
 	return decoratorSets;
 }
 
+/**
+ * The main routine. Runs whenever selection of document changes.
+ */
 function process(): void {
 	const editor = vs.window.activeTextEditor;
 	const document = editor?.document;
@@ -116,14 +124,14 @@ function process(): void {
 	editor.setDecorations(hiddenDecorationType, hidden);
 }
 
-function processLink(pos: number, text: string, document: vs.TextDocument) {
+function processLink(pos: number, text: string, document: vs.TextDocument): void {
 	let match: RegExpExecArray | null;
 	while(match = linkPattern.exec(text)) {
 		const s = pos + match.index;
 		const start = document.positionAt(s);
 		const end = document.positionAt(s + match[0].length);
 		const alt = match[3]?.trim();
-		
+
 		// Add local file link
 		let link: vs.DocumentLink | undefined;
 		if(/^(file:)?\.\.?\//.test(match[2])) {
