@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.2.1
+
+- Skip throttling on editor change.
+
+## 0.2.0
+
+- Add local file link support.
+
 ## 0.1.8
 
 - Fix multiple selection.

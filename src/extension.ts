@@ -25,9 +25,13 @@ const documentLinkProvider: vs.DocumentLinkProvider<vs.DocumentLink> = {
 export function activate(context: vs.ExtensionContext): void {
 	const throttledProcess = throttle(process, THROTTLE_DELAY);
 
-	vs.window.onDidChangeActiveTextEditor(throttledProcess, null, context.subscriptions);
+	// Change editor tab, etc.
+	vs.window.onDidChangeActiveTextEditor(throttledProcess.skip, null, context.subscriptions);
+
+	// When cursor moves or selection changes.
 	vs.window.onDidChangeTextEditorSelection(throttledProcess, null, context.subscriptions);
 
+	// When the content of the text is changed (by inputting etc.).
 	vs.workspace.onDidChangeTextDocument(event => {
 		const editor = vs.window.activeTextEditor;
 		if(event.document == editor?.document) throttledProcess();
@@ -35,10 +39,15 @@ export function activate(context: vs.ExtensionContext): void {
 
 	vs.languages.registerDocumentLinkProvider(supportedLang, documentLinkProvider);
 
-	throttledProcess();
+	throttledProcess.skip();
 }
 
-function throttle(func: () => void, wait: number): () => void {
+interface Throttled {
+	(): void;
+	skip: () => void;
+}
+
+function throttle(func: () => void, wait: number): Throttled {
 	let last = 0;
 	let pending = false;
 	function throttled() {
@@ -55,6 +64,10 @@ function throttle(func: () => void, wait: number): () => void {
 			}, wait - diff);
 		}
 	}
+	throttled.skip = function() {
+		last = Date.now();
+		func();
+	};
 	return throttled;
 }
 
