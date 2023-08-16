@@ -14,6 +14,22 @@ const linkPattern = /(\{@link(?:code|plain)?\s+)([^|}\s]+)(?:[|\s]\s*([^}\s][^}]
 
 const supportedLang = ['javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'svelte', 'vue'];
 
+const definitionProvider: vs.DefinitionProvider = {
+	provideDefinition: (document, position) =>{
+		const decorator = scanDocument(document).find((decorator): decorator is DecoratorSet & { link: vs.DocumentLink } =>
+			decorator.link && position.isAfterOrEqual(decorator.start) && position.isBeforeOrEqual(decorator.end) || false);
+		if (!decorator || !decorator.link.targetRange) {
+			return [];
+		}
+		const locationLink: vs.LocationLink = {
+			originSelectionRange: decorator.link.range,
+			targetUri: decorator.link.target,
+			targetRange: decorator.link.targetRange,
+		};
+		return [locationLink];
+	}
+};
+
 const documentLinkProvider: vs.DocumentLinkProvider<vs.DocumentLink> = {
 	provideDocumentLinks: (document) =>
 		scanDocument(document).map(decorator => decorator.link).filter(Boolean) as vs.DocumentLink[]
@@ -37,6 +53,7 @@ export function activate(context: vs.ExtensionContext): void {
 		if(event.document == editor?.document) throttledProcess();
 	}, null, context.subscriptions);
 
+	vs.languages.registerDefinitionProvider(supportedLang, definitionProvider);
 	vs.languages.registerDocumentLinkProvider(supportedLang, documentLinkProvider);
 
 	throttledProcess.skip();
@@ -71,11 +88,16 @@ function throttle(func: () => void, wait: number): Throttled {
 	return throttled;
 }
 
+interface RelativeFileLink extends vs.DocumentLink {
+	target: vs.Uri;
+	targetRange?: vs.Range;
+}
+
 interface DecoratorSet {
 	start: vs.Position;
 	end: vs.Position;
 	options: vs.DecorationOptions[];
-	link?: vs.DocumentLink;
+	link?: RelativeFileLink;
 }
 
 let textCache: string;
@@ -146,14 +168,26 @@ function processLink(pos: number, text: string, document: vs.TextDocument): void
 		const alt = match[3]?.trim();
 
 		// Add local file link
-		let link: vs.DocumentLink | undefined;
-		if(/^(file:)?\.\.?\//.test(match[2])) {
+		let link: RelativeFileLink | undefined;
+		const relativeLinkMatch = /^(?:file:(?:\/\/)?)?(\.\.?\/[^#]*)(#.*)?/.exec(match[2]);
+		if(relativeLinkMatch) {
+			const [,relativePath, fragment] = relativeLinkMatch;
+			let targetRange: vs.Range | undefined;
+			if(fragment?.startsWith('#L')) {
+				const [start, end] = fragment.slice(2).split('-');
+				const startLine = parseInt(start, 10);
+				const endLine = end ? parseInt(end, 10) : startLine;
+				if(!Number.isNaN(startLine)) {
+					targetRange = new vs.Range(startLine - 1, 0, (Number.isNaN(endLine) ? startLine : endLine) - 1, 0);
+				}
+			}
 			link = {
+				targetRange,
 				range: new vs.Range(
 					document.positionAt(s + match[1].length),
 					document.positionAt(s + match[1].length + match[2].length)
 				),
-				target: vs.Uri.joinPath(document.uri, '..', match[2]),
+				target: vs.Uri.joinPath(document.uri, '..', relativePath),
 			};
 		}
 
