@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.2.2
+
+- Fix issue #5.
+
 ## 0.2.1
 
 - Skip throttling on editor change.
