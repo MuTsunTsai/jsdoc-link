@@ -1,4 +1,5 @@
 {
+	"type": "module",
 	"name": "jsdoc-link",
 	"displayName": "JSDoc Link",
 	"description": "Preview JSDoc link in-place.",
@@ -17,6 +18,9 @@
 		"javascript",
 		"typescript"
 	],
+	"private": true,
+	"sideEffects": false,
+	"author": "Mu-Tsun Tsai <don.m.t.tsai@gmail.com> (https://github.com/MuTsunTsai)",
 	"engines": {
 		"vscode": "^1.76.0"
 	},
@@ -38,27 +42,18 @@
 		"workspaceContains:*.svelte"
 	],
 	"main": "./out/extension.js",
-	"contributes": {},
 	"scripts": {
-		"vscode:prepublish": "npm run compile",
-		"compile": "tsc -p ./",
-		"watch": "tsc -watch -p ./",
-		"pretest": "npm run compile && npm run lint",
-		"lint": "eslint src --ext ts",
-		"test": "node ./out/test/runTest.js"
+		"build": "tsc -p ./",
+		"lint": "eslint src",
+		"vscode:prepublish": "pnpm run build",
+		"watch": "tsc -watch -p ./"
 	},
 	"devDependencies": {
-		"@types/glob": "^8.1.0",
-		"@types/lodash": "^4.14.191",
-		"@types/mocha": "^10.0.1",
-		"@types/node": "^18.15.5",
-		"@types/vscode": "^1.76.0",
-		"@typescript-eslint/eslint-plugin": "^5.56.0",
-		"@typescript-eslint/parser": "^5.56.0",
-		"@vscode/test-electron": "^2.3.0",
-		"eslint": "^8.36.0",
-		"glob": "^9.3.1",
-		"mocha": "^10.2.0",
-		"typescript": "^5.0.2"
+		"@mutsuntsai/eslint": "^1.4.6",
+		"@types/node": "^25.7.0",
+		"@types/vscode": "^1.118.0",
+		"@vscode/test-electron": "^2.5.2",
+		"eslint": "^10.3.0",
+		"typescript": "^6.0.3"
 	}
 }

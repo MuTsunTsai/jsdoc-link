@@ -1,22 +1,23 @@
-import * as vs from 'vscode';
+import * as vs from "vscode";
 
 const THROTTLE_DELAY = 800;
+const COMMENT_PREFIX_LENGTH = 3; // length of `/**`
 const hoverEnableDecorationType = vs.window.createTextEditorDecorationType({
 	// `display:none;` will cause trouble with hover message
-	textDecoration: 'none; display:inline-block; width:0; height:0; overflow:hidden;',
+	textDecoration: "none; display:inline-block; width:0; height:0; overflow:hidden;",
 });
 const hiddenDecorationType = vs.window.createTextEditorDecorationType({
-	textDecoration: 'none; display:none;',
+	textDecoration: "none; display:none;",
 });
 
 const commentPattern = /\/\*\*(.+?)\*\//gs;
 const linkPattern = /(\{@link(?:code|plain)?\s+)([^|}\s]+)(?:(?:\s*\|\s*|\s+)([^}\s][^}]*)|\s+)?\}/gs;
 
-const supportedLang = ['javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'svelte', 'vue'];
+const supportedLang = ["javascript", "typescript", "javascriptreact", "typescriptreact", "svelte", "vue"];
 
 const documentLinkProvider: vs.DocumentLinkProvider<vs.DocumentLink> = {
-	provideDocumentLinks: (document) =>
-		scanDocument(document).map(decorator => decorator.link).filter(Boolean) as vs.DocumentLink[]
+	provideDocumentLinks: document =>
+		scanDocument(document).map(decorator => decorator.link).filter(Boolean) as vs.DocumentLink[],
 };
 
 /**
@@ -91,10 +92,10 @@ function scanDocument(document: vs.TextDocument): DecoratorSet[] {
 	if(textCache != text) {
 		textCache = text;
 		decoratorSets = [];
-		linkColor = new vs.ThemeColor('textLink.foreground');
+		linkColor = new vs.ThemeColor("textLink.foreground");
 		let match: RegExpExecArray | null;
 		while(match = commentPattern.exec(text)) {
-			const pos = match.index + 3;
+			const pos = match.index + COMMENT_PREFIX_LENGTH;
 			processLink(pos, match[1], document);
 		}
 	}
@@ -144,55 +145,50 @@ function processLink(pos: number, text: string, document: vs.TextDocument): void
 		const start = document.positionAt(s);
 		const end = document.positionAt(s + match[0].length);
 		const alt = match[3]?.trim();
-
-		// Add local file link
-		let link: vs.DocumentLink | undefined;
-		if(/^(file:)?\.\.?\//.test(match[2])) {
-			link = {
-				range: new vs.Range(
-					document.positionAt(s + match[1].length),
-					document.positionAt(s + match[1].length + match[2].length)
-				),
-				target: vs.Uri.joinPath(document.uri, '..', match[2]),
-			};
-		}
+		const link = createLink(match, s, document);
+		const p1 = document.positionAt(s + match[1].length);
+		const p2 = document.positionAt(s + match[1].length + match[2].length);
 
 		if(!alt) {
 			// when alt text is not used, a simple replacement will do
 			decoratorSets.push({
 				start, end, link,
-				options: [{
-					range: new vs.Range(start, end),
-					renderOptions: {
-						after: {
-							color: linkColor,
-							contentText: match[2],
-							fontStyle: 'normal'
-						}
-					}
-				}]
+				options: [createRenderOption(start, end, match[2])],
 			});
 		} else {
 			// extra care is necessary to keep the hover message
-			const p1 = document.positionAt(s + match[1].length);
-			const p2 = document.positionAt(s + match[1].length + match[2].length);
 			decoratorSets.push({
 				start, end, link,
 				options: [
 					{ range: new vs.Range(start, p1) },
 					{ range: new vs.Range(p2, end) },
-					{
-						range: new vs.Range(p1, p2),
-						renderOptions: {
-							after: {
-								color: linkColor,
-								contentText: alt,
-								fontStyle: 'normal'
-							}
-						}
-					}
-				]
+					createRenderOption(p1, p2, alt),
+				],
 			});
 		}
 	}
+}
+
+function createLink(match: RegExpExecArray, s: number, document: vs.TextDocument): vs.DocumentLink | undefined {
+	if(!/^(file:)?\.\.?\//.test(match[2])) return undefined;
+	return {
+		range: new vs.Range(
+			document.positionAt(s + match[1].length),
+			document.positionAt(s + match[1].length + match[2].length)
+		),
+		target: vs.Uri.joinPath(document.uri, "..", match[2]),
+	};
+}
+
+function createRenderOption(start: vs.Position, end: vs.Position, contentText: string): vs.DecorationOptions {
+	return {
+		range: new vs.Range(start, end),
+		renderOptions: {
+			after: {
+				color: linkColor,
+				contentText,
+				fontStyle: "normal",
+			},
+		},
+	};
 }
